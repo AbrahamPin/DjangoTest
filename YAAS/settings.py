@@ -25,7 +25,10 @@ SECRET_KEY = 'n4f0tbohk+a52l_!ehoj#6wsm!hn5+u@&ln0eka6pqu8vlrc_a'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'abrahampin.pythonanywhere.com',
+    '.pythonanywhere.com',
+    '.googleapis.com',]
 
 
 AUTHENTICATION_BACKENDS = [
