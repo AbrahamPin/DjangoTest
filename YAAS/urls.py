@@ -10,6 +10,8 @@ urlpatterns = [
     url(r'^createuser/$', register),
     url(r'^login/$', login_view),
     url(r'^logout/$', logout_view),
+    url(r'^editprofile/$', editprofile, name="editprofile"),
+    url(r'^password/$', changepassword, name="changepassword"),
     url(r'^add/$', Addauction.as_view(), name="add_auction"),
     #url(r'^delete/$', deleteAuction.as_view(), name="delete_auction"),
     url(r'^authview/$', auth_view),

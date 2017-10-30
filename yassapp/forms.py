@@ -1,7 +1,7 @@
 from _socket import herror
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm, PasswordChangeForm
 from django.utils import timezone
 from django import forms
 from django.forms import EmailField
@@ -23,6 +23,11 @@ class UserCreationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+class EditProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['email']
 
 class createAuction(forms.Form):
     title = forms.CharField(required=True)

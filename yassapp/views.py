@@ -1,10 +1,10 @@
 from django.contrib import messages, auth
-from django.contrib.auth import logout
+from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponse,HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils import translation
 from django.utils.translation import ugettext as _
@@ -12,8 +12,9 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 
+
 from yassapp.models import Auction
-from yassapp.forms import createAuction, confAuction, UserCreationForm
+from yassapp.forms import *
 import datetime
 
 def archive(request):
@@ -79,7 +80,6 @@ def updateauction(request, offset):
 
 @method_decorator(login_required, name="dispatch")
 class Addauction(View):
-
     def get(self, request):
         form = createAuction()
         return render(request, 'createauction.html', {'form': form})
@@ -138,6 +138,36 @@ def register(request):
 
     return render(request,"registration.html", {'form': form})
 
+def editprofile(request):
+    if request.method == 'POST':
+        form = EditProfileForm(request.POST, instance=request.user)
+
+        if form.is_valid():
+            form.save()
+            messages.add_message(request, messages.INFO, "New Email Saved")
+            return HttpResponseRedirect(reverse("editprofile"))
+    else:
+        form = EditProfileForm(instance=request.user)
+        args = {'form': form}
+    return render(request, "editprofile.html", args)
+
+
+def changepassword(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(data=request.POST, user=request.user)
+
+        if form.is_valid():
+            form.save()
+            messages.add_message(request, messages.INFO, "Password Changed.")
+            update_session_auth_hash(request, form.user)
+            return HttpResponseRedirect(reverse("editprofile"))
+        else:
+            messages.error(request, 'Passwords did not match.')
+            return HttpResponseRedirect(reverse("changepassword"))
+    else:
+        form = PasswordChangeForm(user=request.user)
+        args = {'form': form}
+    return render(request, "changepassword.html", args)
 
 def login_view(request):
     if request.method == 'POST':

@@ -28,7 +28,9 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'abrahampin.pythonanywhere.com',
     '.pythonanywhere.com',
-    '.googleapis.com',]
+    '.googleapis.com',
+    '127.0.0.1',
+]
 
 
 AUTHENTICATION_BACKENDS = [
