@@ -1,19 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
 {% load i18n %}
+{% load humanize %}
+
+<form method="get"  action="">
+  <input name="q" type="text" placeholder="Search Auctions" value="{{ request.GET.q }}">
+  <input type="submit" value="Search">
+</form>
+
 {% for post in auctions %}
-    <h2>{{ post.title }}</h2> <a href="/edit/{{ post.id }}/">Edit auction</a>
-    <p>ID: {{ post.id }}</p>
-    <p>Time: {{ post.timestamp }}</p>
-    <p>Deadline: {{ post.deadline }}</p>
-    <p>Price: {{ post.price }}</p>
-    <p>Seller: {{ post.owner.username }}</p>
-    <p>{{ post.description }}</p>
+
+    {% if post.activestatus == True %}
+        <h2>{{ post.title }}</h2>
+        <!--User is owner of the Auction-->
+        {% if user.is_authenticated and user == post.owner %}
+            <a href="/edit/{{ post.id }}/">Edit Auction</a>
+        {% endif %}
+
+        <!--User is not owner of the Auction-->
+        {% if user.is_authenticated and user != post.owner %}
+            <a href="/bid/{{ post.id }}/">Bid</a>
+        {% endif %}
+
+        <!--User is an Admin-->
+        {% if user.is_authenticated and user.is_superuser %}
+            <a href="/ban/{{ post.id }}/">Ban Auction</a>
+        {% endif %}
+
+
+        <p>ID: {{ post.id }}</p>
+        <p>Deadline: {{ post.deadline }}</p>
+        <p>Price: {{  post.price|intcomma }}</p>
+        <p>Seller: {{ post.owner.username }}</p>
+        <p>{{ post.description }}</p>
+    {% endif %}
+
 {% empty %}
     <p>No Auction Posts<p>
 {%  endfor %}
 
-<form action="{% url 'set_language' %}" method="post">
+    <form action="{% url 'set_language' %}" method="post">
     {% csrf_token %}
     <input name="next" type="hidden" value="{{ redirect_to }}" />
     <select name="language">

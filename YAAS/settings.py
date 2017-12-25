@@ -33,10 +33,23 @@ ALLOWED_HOSTS = [
 ]
 
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 AUTHENTICATION_BACKENDS = [
         'django.contrib.auth.backends.ModelBackend',
     ]
 
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+}
+
+DJANGO_MONEY_RATES = {
+    'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',
+    'OPENEXCHANGE_URL': 'http://openexchangerates.org/api/latest.json',
+    'OPENEXCHANGE_APP_ID': '1defeb00a3d24a8190fe90f9775156ba',
+    'OPENEXCHANGE_BASE_CURRENCY': 'USD',
+}
 
 # Application definition
 
@@ -47,6 +60,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
+    "django_cron",
+    'currencies',
     'rest_framework',
     'rest_framework.authtoken',
     'yassapp.apps.YassappConfig',
@@ -64,6 +80,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CRON_CLASSES = [
+    "yassapp.cron.CronResolver",
+]
+
 ROOT_URLCONF = 'YAAS.urls'
 
 TEMPLATES = [
@@ -74,6 +94,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'currencies.context_processors.currencies',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -136,3 +157,5 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+OPENEXCHANGERATES_APP_KEY = "1defeb00a3d24a8190fe90f9775156ba"
+OPENEXCHANGERATES_APP_ID = "1defeb00a3d24a8190fe90f9775156ba"

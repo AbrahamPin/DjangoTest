@@ -33,22 +33,15 @@ class createAuction(forms.Form):
     title = forms.CharField(required=True)
     description = forms.CharField(widget=forms.Textarea(), required=False)
     price = forms.DecimalField(required=True)
-    deadline = forms.DateTimeField( input_formats=['%d-%m-%Y %H:%M'], help_text="Please use the following format: <em>01-01-2017 23:59</em>")
+    deadline = forms.DateTimeField(input_formats=['%d-%m-%Y %H:%M'], help_text="Please use the following format: <em>01-01-2017 23:59</em>")
 
     def clean(self):
         deadline = self.cleaned_data['deadline']
-
         if deadline < (datetime.datetime.now() + datetime.timedelta(days=3)):
             raise forms.ValidationError("The date cannot be in the past!")
 
-
-    # def clean(self):
-    #     title = self.cleaned_data['title']
-    #
-    #     if "Test" not in title:
-    #         raise forms.ValidationError("Wrong Title name")
-
-
+class bidAuction(forms.Form):
+    price = forms.DecimalField(required=True)
 
 
 class confAuction(forms.Form):
@@ -59,4 +52,6 @@ class confAuction(forms.Form):
     a_price = forms.DecimalField(widget=forms.HiddenInput())
     a_time = forms.DateTimeField(widget=forms.HiddenInput())
 
-
+class confBan(forms.Form):
+    CHOICES = [(x, x) for x in ("Yes", "No")]
+    option = forms.ChoiceField(choices=CHOICES)

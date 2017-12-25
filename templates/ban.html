@@ -7,10 +7,10 @@
     <p> Password or username is incorrect </p>
   {% endif %}
 
-<form method="post" action="/updatebid/{{ id }}/" class="">
+<form method="post" action="/confirmban/{{ id }}/" class="">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Save Changes</button>
+   <input type="submit" value="Submit">
 
 </form>
 

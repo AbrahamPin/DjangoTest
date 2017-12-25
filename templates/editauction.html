@@ -4,11 +4,11 @@
 
 {% block content %}
 
-<p><b>Edit Auction: {{ title }}</b></p>
+<p>Edit Auction: {{ title }}</p>
     <form action="/update/{{ id }}/" method="post">
         {%  csrf_token %}
-       <p>Title: <input type="text" name="title" id="title" value="{{ title }}"></p>
-       <p>Description: <textarea name="description" cols="50" rows="20">{{ body }}</textarea></p>
+        <input type="hidden" name="title" id="title" value="{{ title }}">
+        <p>Description: <textarea name="description" cols="50" rows="20">{{ description }}</textarea></p>
         <input type="submit" value="Change">
     </form>
 
