@@ -35,7 +35,16 @@ def archive(request):
     if query:
         auctions = auctions.filter(title__icontains=query)
 
-    return render(request,'archive.html', {'auctions': auctions, })
+    try:
+        language = request.session[translation.LANGUAGE_SESSION_KEY]
+    except KeyError:
+        language = 'en'
+    language_form = LanguageForm(initial={'language': language})
+
+    return render(request,'archive.html', {
+        'auctions': auctions,
+        'language': language_form,
+    })
 
 def redirectView(request):
     return HttpResponseRedirect('/home/')
@@ -92,10 +101,10 @@ def editauction(request, offset):
     else:
         auction = get_object_or_404(Auction, id=offset)
         if request.user == auction.owner:
-            print("Sesion pre: ",auction.session)
             if auction.session == '' or auction.session == request.session._get_or_create_session_key():
                 auction.session = request.session._get_or_create_session_key()
-                print("sesion1: ",auction.session)
+                auction.save()
+
                 return render(request,"editauction.html",
                     {'user': request.user,
                      "title": auction.title,
@@ -121,7 +130,6 @@ def updateauction(request, offset):
     if request.method=="POST":
         description = request.POST["description"].strip()
         title = request.POST["title"].strip()
-        print("sesion2: ", auction.session)
         auction.title = title
         auction.description = description
 
@@ -140,15 +148,19 @@ def bid(request, offset):
         auction = get_object_or_404(Auction, id=offset)
 
         if str(request.user) != auction.bidder:
-            form = bidAuction(initial={'price': auction.price})
-            return render(request,"bid.html",
-                {'user': request.user,
-                 'form': form,
-                 "title": auction.title,
-                 "id": auction.id,
-                 "description": auction.description,
-                 "price": auction.price,
-                 "bidder": request.user})
+            if auction.session == '':
+                form = bidAuction(initial={'price': auction.price})
+                return render(request,"bid.html",
+                    {'user': request.user,
+                     'form': form,
+                     "title": auction.title,
+                     "id": auction.id,
+                     "description": auction.description,
+                     "price": auction.price,
+                     "bidder": request.user})
+            else:
+                messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
+                return HttpResponseRedirect(reverse("home"))
         else:
             messages.add_message(request, messages.INFO, "No new bids since your last bid.")
             return HttpResponseRedirect(reverse("home"))
@@ -163,53 +175,57 @@ def updatebid(request, offset):
         return HttpResponseRedirect(reverse("home"))
 
     if request.method=="POST":
-        price = request.POST["price"].strip()
-        if float(auction.price) + .01 <= float(price):
-            previousbidder = auction.bidder
-            auction.bidder = str(request.user)
-            auction.price = price
+        if auction.session == '':
+            price = request.POST["price"].strip()
+            if float(auction.price) + .01 <= float(price):
+                previousbidder = auction.bidder
+                auction.bidder = str(request.user)
+                auction.price = price
 
-            if auction.deadline <= (datetime.datetime.now() + datetime.timedelta(minutes=5)):
-                auction.deadline = auction.deadline + datetime.timedelta(minutes=5)
-                messages.add_message(request, messages.INFO, "Auction deadline has 5 more minutes.")
-                auction.save()
-            else:
-                auction.save()
+                if auction.deadline <= (datetime.datetime.now() + datetime.timedelta(minutes=5)):
+                    auction.deadline = auction.deadline + datetime.timedelta(minutes=5)
+                    messages.add_message(request, messages.INFO, "Auction deadline has 5 more minutes.")
+                    auction.save()
+                else:
+                    auction.save()
 
-            #Send email to Seller
-            subject = "New Bid on your Auction"
-            recipient_list = [auction.owner.email]
-            message = "Your auction has a new bid."
-            sendEmail(subject, recipient_list, message)
-
-            #Send email to New Bidder
-            user = User.objects.get(username=auction.bidder)
-            subject = "New Bid on an Auction"
-            recipient_list = [user.email]
-            message = "Your bid has been successfully submitted."
-            sendEmail(subject, recipient_list, message)
-
-            #Send email to Old Bidder
-            if previousbidder != '':
-                user = User.objects.get(username=previousbidder)
-                subject = "Bid Surpassed"
-                recipient_list = [user.email]
-                message = "Your bid on an Auction has been surpassed."
+                #Send email to Seller
+                subject = "New Bid on your Auction"
+                recipient_list = [auction.owner.email]
+                message = "Your auction has a new bid."
                 sendEmail(subject, recipient_list, message)
-            
 
-            messages.add_message(request, messages.INFO, "You made a new bid!")
+                #Send email to New Bidder
+                user = User.objects.get(username=auction.bidder)
+                subject = "New Bid on an Auction"
+                recipient_list = [user.email]
+                message = "Your bid has been successfully submitted."
+                sendEmail(subject, recipient_list, message)
+
+                #Send email to Old Bidder
+                if previousbidder != '':
+                    user = User.objects.get(username=previousbidder)
+                    subject = "Bid Surpassed"
+                    recipient_list = [user.email]
+                    message = "Your bid on an Auction has been surpassed."
+                    sendEmail(subject, recipient_list, message)
+
+
+                messages.add_message(request, messages.INFO, "You made a new bid!")
+            else:
+                messages.add_message(request, messages.INFO, "The bid has to be higher than 0.01 from the current price")
+                form = bidAuction(initial={'price': auction.price})
+                return render(request, "bid.html",
+                              {'user': request.user,
+                               'form': form,
+                               "title": auction.title,
+                               "id": auction.id,
+                               "description": auction.description,
+                               "price": auction.price,
+                               "bidder": request.user})
         else:
-            messages.add_message(request, messages.INFO, "The bid has to be higher than 0.01 from the current price")
-            form = bidAuction(initial={'price': auction.price})
-            return render(request, "bid.html",
-                          {'user': request.user,
-                           'form': form,
-                           "title": auction.title,
-                           "id": auction.id,
-                           "description": auction.description,
-                           "price": auction.price,
-                           "bidder": request.user})
+            messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
+            return HttpResponseRedirect(reverse("home"))
 
     return HttpResponseRedirect(reverse("home"))
 

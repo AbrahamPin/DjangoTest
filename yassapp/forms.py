@@ -55,3 +55,8 @@ class confAuction(forms.Form):
 class confBan(forms.Form):
     CHOICES = [(x, x) for x in ("Yes", "No")]
     option = forms.ChoiceField(choices=CHOICES)
+
+
+class LanguageForm(forms.Form):
+    language = forms.ChoiceField(choices=[(x, x) for x in ('en', 'es')],
+                                 widget=forms.Select(attrs={"onChange": 'submit()'}))
