@@ -1,4 +1,7 @@
-
+import base64
+import json
+from django.contrib.auth import authenticate
+from django.http import JsonResponse
 from django.contrib import messages, auth
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -27,12 +30,11 @@ def getauction(request, offset):
     })
 
 def archive(request):
+
     try:
         translation.activate(request.session[translation.LANGUAGE_SESSION_KEY])
     except KeyError:
         request.session[translation.LANGUAGE_SESSION_KEY] = "en"
-        #translation.activate(request.session[translation.LANGUAGE_SESSION_KEY])
-
 
     auctions = Auction.objects.all().order_by('-timestamp')
 
@@ -100,7 +102,7 @@ def saveauction(request):
         #Send Email to Seller
         subject = "New Auction Created"
         recipient_list = [auction.owner.email]
-        message = "Your New Auction has been created."
+        message = "Your New Auction has been created, here is the link: http://127.0.0.1:8000/auction/" + str(auction.id) + "/"
         sendEmail(subject, recipient_list, message)
 
         messages.add_message(request, messages.INFO, "New auction has been saved")
@@ -345,3 +347,83 @@ import requests
 def get_rate(symbol, base='EUR'):
     r = requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol})
     return requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol}).json()['rates'][symbol]
+
+
+
+
+
+class AuctionApi(View):
+    def get(self, request, offset):
+        try:
+            auction = Auction.objects.get(~Q(banstatus=True), ~Q(activestatus=False), pk=offset)
+        except Auction.DoesNotExist:
+            return json_error('No auction found.', 404)
+
+        return JsonResponse({
+            'auction': auction.to_json()
+        })
+
+    def put(self, request, offset):
+        user = authenticate_user(request)
+        if user is None:
+            return json_error('Invalid credentials.', 401)
+
+        # try:
+        #     bid = json.loads(request.body)['bid']
+        # except KeyError:
+        #     return json_error('Missing parameter.', 400)
+        #
+        # try:
+        #     auction = Auction.objects.get(~Q(banstatus=True), pk=offset)
+        # except Auction.DoesNotExist:
+        #     return json_error('No auction found.', 404)
+
+        # add_bid = auction.add_bid(Bid(
+        #     auction=auction,
+        #     bidder=user,
+        #     bid=bid,
+        #     time=datetime.today()
+        # ))
+
+        response = JsonResponse({
+            'Success msg'
+            # 'success': str(bid) + '€ bid placed (' + auction.title + ').'
+        })
+        response.status_code = 201
+        return response
+
+
+class AuctionsApi(View):
+    def get(self, request, search_query=''):
+        auctions = Auction.objects.filter(~Q(banstatus=True), ~Q(activestatus=False),  title__contains=search_query).order_by('-deadline')
+        if not auctions:
+            return json_error('No auction found.', 404)
+
+        auctions_json = []
+        for auction in auctions:
+            auctions_json.append({'auction': auction.to_json()})
+
+        return JsonResponse({
+            'auctions:': auctions_json
+        })
+
+
+def authenticate_user(request):
+    # credits to https://stackoverflow.com/a/38044377
+    if 'HTTP_AUTHORIZATION' not in request.META:
+        return None
+
+    auth_header = request.META['HTTP_AUTHORIZATION']
+    encoded_credentials = auth_header.split(' ')[1]
+    decoded_credentials = base64.b64decode(encoded_credentials).decode("utf-8")
+    username, password = decoded_credentials.split(':')
+    return authenticate(username=username, password=password)
+
+
+def json_error(message, error_code):
+    response = JsonResponse({
+        'error': message
+    })
+    response.status_code = error_code
+
+    return response

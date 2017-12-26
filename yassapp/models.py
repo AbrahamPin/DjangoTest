@@ -25,3 +25,14 @@ class Auction(models.Model):
 
     def __str__(self):
         return self.title
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'seller': self.owner.username,
+            'description': self.description,
+            'price': self.price,
+            'deadline': self.deadline,
+            'bidder': self.bidder
+        }
