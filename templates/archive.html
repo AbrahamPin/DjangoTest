@@ -11,7 +11,7 @@
 {% for post in auctions %}
 
     {% if post.activestatus == True %}
-        <h2>{{ post.title }}</h2>
+        <a href="/auction/{{ post.id }}"><h2>{{ post.title }}</h2></a>
         <!--User is owner of the Auction-->
         {% if user.is_authenticated and user == post.owner %}
             <a href="/edit/{{ post.id }}/">Edit Auction</a>
@@ -32,7 +32,7 @@
         <p>Deadline: {{ post.deadline }}</p>
         <p>Price: {{ symbol }} {{  post.price|intcomma }}</p>
         <p>Seller: {{ post.owner.username }}</p>
-        <p>{{ post.description }}</p>
+        <p>Description: {{ post.description }}</p>
     {% endif %}
 
 {% empty %}

@@ -6,20 +6,25 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils import translation
-from django.utils.translation import ugettext as _
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views import View
 from .email  import sendEmail
 from yassapp.serializers import AuctionSerializer
 from rest_framework import filters
-from yassapp.currencyapi import CurrencyConverter
 
 
 from yassapp.models import Auction
 from yassapp.forms import *
 import datetime
 
-converter = CurrencyConverter("http://howco.de/ex")
+
+def getauction(request, offset):
+    auction = get_object_or_404(Auction, id=offset)
+
+    return render(request, 'auction.html', {
+        'auction': auction,
+    })
 
 def archive(request):
     try:

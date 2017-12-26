@@ -10,6 +10,8 @@ urlpatterns = [
     url(r'^editprofile/$', editprofile, name="editprofile"),
     url(r'^password/$', changepassword, name="changepassword"),
 
+
+    url(r'^auction/(\d+)/$', getauction),
     url(r'^add/$', Addauction.as_view(), name="add_auction"),
     url(r'^edit/(\d+)/$', editauction),
     url(r'^saveauction/$', saveauction),
