@@ -57,6 +57,12 @@ class confBan(forms.Form):
     option = forms.ChoiceField(choices=CHOICES)
 
 
-class LanguageForm(forms.Form):
+class langForm(forms.Form):
     language = forms.ChoiceField(choices=[(x, x) for x in ('en', 'es')],
                                  widget=forms.Select(attrs={"onChange": 'submit()'}))
+
+class currForm(forms.Form):
+    currencies = [(x, x) for x in ('AUD', 'BGN', 'BRL', 'CAD', 'CHF', 'CNY', 'CZK', 'DKK', 'EUR', 'GBP',
+                    'HKD', 'HRK', 'HUF', 'IDR', 'ILS', 'INR', 'JPY', 'KRW', 'MXN', 'MYR', 'NOK', 'NZD',
+                    'PHP', 'PLN', 'RON', 'RUB', 'SEK', 'SGD', 'THB', 'TRY', 'USD', 'ZAR')]
+    currency = forms.ChoiceField(choices=currencies, widget=forms.Select(attrs={"onChange": 'submit()'}))

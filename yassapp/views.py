@@ -2,7 +2,6 @@
 from django.contrib import messages, auth
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, get_object_or_404
@@ -10,6 +9,7 @@ from django.utils import translation
 from django.utils.translation import ugettext as _
 from django.utils.decorators import method_decorator
 from django.views import View
+from .email  import sendEmail
 from yassapp.serializers import AuctionSerializer
 from rest_framework import filters
 from yassapp.currencyapi import CurrencyConverter
@@ -35,15 +35,25 @@ def archive(request):
     if query:
         auctions = auctions.filter(title__icontains=query)
 
+    symbol = request.GET.get('currency', 'EUR')
+    if symbol != 'EUR':
+        rate = get_rate(symbol)
+        for auction in auctions:
+            auction.price = round(float(auction.price) * rate, 2)
+
+    currency_form = currForm(initial={'currency': symbol})
+
     try:
         language = request.session[translation.LANGUAGE_SESSION_KEY]
     except KeyError:
         language = 'en'
-    language_form = LanguageForm(initial={'language': language})
+    language_form = langForm(initial={'language': language})
 
     return render(request,'archive.html', {
         'auctions': auctions,
         'language': language_form,
+        'currency': currency_form,
+        'symbol': symbol,
     })
 
 def redirectView(request):
@@ -84,11 +94,9 @@ def saveauction(request):
 
         #Send Email to Seller
         subject = "New Auction Created"
-        message = "Your New Auction has been created"
-        from_email = 'noreply@yaas.com'
         recipient_list = [auction.owner.email]
-        email = EmailMessage(subject, message, from_email, recipient_list)
-        email.send()
+        message = "Your New Auction has been created."
+        sendEmail(subject, recipient_list, message)
 
         messages.add_message(request, messages.INFO, "New auction has been saved")
         return HttpResponseRedirect(reverse("home"))
@@ -326,41 +334,9 @@ def logout_view(request):
     messages.add_message(request, messages.INFO, "Logged out")
     return HttpResponseRedirect(reverse("home"))
 
-
-def sendEmail(subject, recipient_list, message):
-    from_email = 'noreply@yaas.com'
-    email = EmailMessage(subject, message, from_email, recipient_list)
-    email.send()
-
-def sendOwnerBidEmail(auction):
-    # Send Email to Seller
-    subject = "New Bid on your Auction"
-    from_email = 'noreply@yaas.com'
-    recipient_list = [auction.owner.email]
-    message = "Your auction has a new bid."
-    email = EmailMessage(subject, message, from_email, recipient_list)
-    email.send()
+import requests
 
 
-def sendOldBidderBidEmail(previousBidder):
-    # Send Email to old bidder
-    if previousBidder != '':
-        user = User.objects.get(username=previousBidder)
-        subject = "Bid Surpassed"
-        from_email = 'noreply@yaas.com'
-        recipient_list = [user.email]
-        message = "Your bid on an Auction has been surpassed."
-        email = EmailMessage(subject, message, from_email, recipient_list)
-        email.send()
-    else:
-        print("There is no previous bidder")
-
-def sendNewBidderBidEmail(auction):
-    # Send Email to new bidder
-    user = User.objects.get(username=auction.bidder)
-    subject = "New Bid on an Auction"
-    from_email = 'noreply@yaas.com'
-    recipient_list = [user.email]
-    message = "Your bid has been successfully submitted."
-    email = EmailMessage(subject, message, from_email, recipient_list)
-    email.send()
+def get_rate(symbol, base='EUR'):
+    r = requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol})
+    return requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol}).json()['rates'][symbol]

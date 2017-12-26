@@ -2,6 +2,7 @@ from django.db.models import Q
 from django_cron import CronJobBase, Schedule
 from .views import sendEmail
 from .models import *
+from datetime import *
 
 class CronResolver(CronJobBase):
     RUN_EVERY_MINS = 1
