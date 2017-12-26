@@ -12,9 +12,7 @@ from django.utils import translation
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views import View
-from .email  import sendEmail
-from yassapp.serializers import AuctionSerializer
-from rest_framework import filters
+from .email import sendEmail
 
 
 from yassapp.models import Auction

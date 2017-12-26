@@ -45,13 +45,6 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
-DJANGO_MONEY_RATES = {
-    'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',
-    'OPENEXCHANGE_URL': 'http://openexchangerates.org/api/latest.json',
-    'OPENEXCHANGE_APP_ID': '1defeb00a3d24a8190fe90f9775156ba',
-    'OPENEXCHANGE_BASE_CURRENCY': 'USD',
-}
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -67,6 +60,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'yassapp.apps.YassappConfig',
+    'autofixture',
 
 ]
 
@@ -143,6 +137,10 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
 )
 
+FIXTURE_DIRS = (
+    'fixtures',
+)
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
@@ -162,5 +160,3 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
-OPENEXCHANGERATES_APP_KEY = "1defeb00a3d24a8190fe90f9775156ba"
-OPENEXCHANGERATES_APP_ID = "1defeb00a3d24a8190fe90f9775156ba"
