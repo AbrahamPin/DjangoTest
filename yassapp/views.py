@@ -1,7 +1,9 @@
 import base64
 import json
+import requests
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
+from rest_framework.response import Response
 from django.contrib import messages, auth
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -350,11 +352,6 @@ def logout_view(request):
     messages.add_message(request, messages.INFO, "Logged out")
     return HttpResponseRedirect(reverse("home"))
 
-import requests
-
-
-
-
 class AuctionApi(View):
     def get(self, request, offset):
         try:
@@ -371,26 +368,21 @@ class AuctionApi(View):
         if user is None:
             return json_error('Invalid credentials.', 401)
 
-        # try:
-        #     bid = json.loads(request.body)['bid']
-        # except KeyError:
-        #     return json_error('Missing parameter.', 400)
-        #
-        # try:
-        #     auction = Auction.objects.get(~Q(banstatus=True), pk=offset)
-        # except Auction.DoesNotExist:
-        #     return json_error('No auction found.', 404)
+        try:
+            price = json.loads(request.body)['price']
+        except KeyError:
+            return json_error('Missing parameter.', 400)
 
-        # add_bid = auction.add_bid(Bid(
-        #     auction=auction,
-        #     bidder=user,
-        #     bid=bid,
-        #     time=datetime.today()
-        # ))
+        try:
+            auction = Auction.objects.get(~Q(banstatus=True), pk=offset)
+        except Auction.DoesNotExist:
+            return json_error('No auction found.', 404)
+
+        auction.price = price
 
         response = JsonResponse({
             'Success msg'
-            # 'success': str(bid) + '€ bid placed (' + auction.title + ').'
+            'success': str(price) + '€ bid placed (' + auction.title + ').'
         })
         response.status_code = 201
         return response
@@ -430,9 +422,6 @@ def json_error(message, error_code):
 
     return response
 
-
-
 def get_rate(symbol, base='EUR'):
-    r = requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol})
     return requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol}).json()['rates'][symbol]
 
