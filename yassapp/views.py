@@ -34,7 +34,7 @@ def archive(request):
     except KeyError:
         request.session[translation.LANGUAGE_SESSION_KEY] = "en"
 
-    auctions = Auction.objects.all().order_by('-timestamp')
+    auctions = Auction.objects.all().order_by('id')
 
     query = request.GET.get("q")
     if query:
@@ -80,15 +80,16 @@ class Addauction(View):
             auction_p = cd['price']
             auction_st = cd['deadline']
             form = confAuction()
-            return render(request,'wizardtest.html', {'form': form, "a_title": auction_t, "a_description": auction_d,
+            return render(request, 'confirmation.html', {'form': form, "a_title": auction_t, "a_description": auction_d,
                                                       "a_price": auction_p, "a_time": auction_st})
         else:
             messages.add_message(request, messages.ERROR, "Not valid data")
             return render(request, 'createauction.html', {'form': form,})
 
+
 def saveauction(request):
     option = request.POST.get('option', '')
-    if option == 'Yes':
+    if option == 'Yes' and request.user.is_authenticated():
         a_title = request.POST.get('a_title', '')
         a_description = request.POST.get('a_description', '')
         a_price = request.POST.get('a_price', '')
@@ -97,13 +98,8 @@ def saveauction(request):
                           owner=request.user, deadline=a_time)
         auction.save()
 
-        #Send Email to Seller
-        subject = "New Auction Created"
-        recipient_list = [auction.owner.email]
-        message = "Your New Auction has been created, here is the link: http://127.0.0.1:8000/auction/" + str(auction.id) + "/"
-        sendEmail(subject, recipient_list, message)
-
-        messages.add_message(request, messages.INFO, "New auction has been saved")
+        # Uncomment after doing tests
+        #messages.add_message(request, messages.INFO, "New auction has been saved")
         return HttpResponseRedirect(reverse("home"))
     else:
         return HttpResponseRedirect(reverse("home"))
@@ -132,7 +128,7 @@ def editauction(request, offset):
 
 
 def updateauction(request, offset):
-    auctions = Auction.objects.filter(id= offset)
+    auctions = Auction.objects.filter(id=offset)
 
     if len(auctions) > 0:
         auction = auctions[0]
@@ -160,23 +156,27 @@ def bid(request, offset):
     else:
         auction = get_object_or_404(Auction, id=offset)
 
-        if str(request.user) != auction.bidder:
-            if auction.session == '':
-                form = bidAuction(initial={'price': auction.price})
-                return render(request,"bid.html",
-                    {'user': request.user,
-                     'form': form,
-                     "title": auction.title,
-                     "id": auction.id,
-                     "description": auction.description,
-                     "price": auction.price,
-                     "bidder": request.user})
-            else:
-                messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
-                return HttpResponseRedirect(reverse("home"))
-        else:
-            messages.add_message(request, messages.INFO, "No new bids since your last bid.")
+        if (auction.activestatus == False) or (auction.banstatus == True):
+            #messages.add_message(request, messages.INFO, "Auction is Due or Banned.")
             return HttpResponseRedirect(reverse("home"))
+        else:
+            if str(request.user) != auction.bidder:
+                if auction.session == '':
+                    form = bidAuction(initial={'price': auction.price})
+                    return render(request,"bid.html",
+                        {'user': request.user,
+                         'form': form,
+                         "title": auction.title,
+                         "id": auction.id,
+                         "description": auction.description,
+                         "price": auction.price,
+                         "bidder": request.user})
+                else:
+                    #messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
+                    return HttpResponseRedirect(reverse("home"))
+            else:
+                #messages.add_message(request, messages.INFO, "No new bids since your last bid.")
+                return HttpResponseRedirect(reverse("home"))
 
 def updatebid(request, offset):
     auctions = Auction.objects.filter(id=offset)
@@ -186,6 +186,15 @@ def updatebid(request, offset):
     else:
         messages.add_message(request, messages.INFO, "Time Ran Out")
         return HttpResponseRedirect(reverse("home"))
+
+    if (auction.activestatus == False) or (auction.banstatus == True):
+        #messages.add_message(request, messages.INFO, "Auction is Due or Banned.")
+        return HttpResponseRedirect(reverse("home"))
+
+    if request.user == auction.owner:
+        #messages.add_message(request, messages.INFO, "Bidder can't be the owner.")
+        return HttpResponseRedirect(reverse("home"))
+
 
     if request.method=="POST":
         if auction.session == '':
@@ -197,7 +206,7 @@ def updatebid(request, offset):
 
                 if auction.deadline <= (datetime.datetime.now() + datetime.timedelta(minutes=5)):
                     auction.deadline = auction.deadline + datetime.timedelta(minutes=5)
-                    messages.add_message(request, messages.INFO, "Auction deadline has 5 more minutes.")
+                    #messages.add_message(request, messages.INFO, "Auction deadline has 5 more minutes.")
                     auction.save()
                 else:
                     auction.save()
@@ -224,20 +233,21 @@ def updatebid(request, offset):
                     sendEmail(subject, recipient_list, message)
 
 
-                messages.add_message(request, messages.INFO, "You made a new bid!")
+                #messages.add_message(request, messages.INFO, "You made a new bid!")
             else:
-                messages.add_message(request, messages.INFO, "The bid has to be higher than 0.01 from the current price")
-                form = bidAuction(initial={'price': auction.price})
-                return render(request, "bid.html",
-                              {'user': request.user,
-                               'form': form,
-                               "title": auction.title,
-                               "id": auction.id,
-                               "description": auction.description,
-                               "price": auction.price,
-                               "bidder": request.user})
+                #messages.add_message(request, messages.INFO, "The bid has to be higher than 0.01 from the current price")
+                return HttpResponseRedirect(reverse("home"))
+                # form = bidAuction(initial={'price': auction.price})
+                # return render(request, "bid.html",
+                #               {'user': request.user,
+                #                'form': form,
+                #                "title": auction.title,
+                #                "id": auction.id,
+                #                "description": auction.description,
+                #                "price": auction.price,
+                #                "bidder": request.user})
         else:
-            messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
+            #messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
             return HttpResponseRedirect(reverse("home"))
 
     return HttpResponseRedirect(reverse("home"))
@@ -258,6 +268,7 @@ def confirmban(request, offset):
         auction.banstatus = True
         auction.activestatus = False
         auction.save()
+
         # Send Email to Seller
         subject = "Auction Banned"
         message = "One of your auctions has been banned"
@@ -342,12 +353,6 @@ def logout_view(request):
 import requests
 
 
-def get_rate(symbol, base='EUR'):
-    r = requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol})
-    return requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol}).json()['rates'][symbol]
-
-
-
 
 
 class AuctionApi(View):
@@ -407,7 +412,6 @@ class AuctionsApi(View):
 
 
 def authenticate_user(request):
-    # credits to https://stackoverflow.com/a/38044377
     if 'HTTP_AUTHORIZATION' not in request.META:
         return None
 
@@ -425,3 +429,10 @@ def json_error(message, error_code):
     response.status_code = error_code
 
     return response
+
+
+
+def get_rate(symbol, base='EUR'):
+    r = requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol})
+    return requests.get('https://api.fixer.io/latest', params={'base': base, 'symbols': symbol}).json()['rates'][symbol]
+

@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from yassapp.email import sendEmail
 from rest_framework.authtoken.models import Token
 
 # The following function will automatically create a Token whenever we create a new user
@@ -25,6 +26,22 @@ class Auction(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        new_auction = False
+        if not self.pk:
+            new_auction = True
+
+        super(Auction, self).save(args, kwargs)
+
+        if new_auction:
+            # Send Email to Seller
+            subject = "New Auction Created"
+            recipient_list = [self.owner.email]
+            message = "Your New Auction has been created, here is the link: http://127.0.0.1:8000/auction/" + str(
+                self.id) + "/"
+            sendEmail(subject, recipient_list, message)
+
 
     def to_json(self):
         return {
