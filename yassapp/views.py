@@ -60,7 +60,7 @@ def archive(request):
         'auctions': auctions,
         'language': language_form,
         'currency': currency_form,
-        #'symbol': symbol,
+        'symbol': symbol,
     })
 
 def redirectView(request):
@@ -100,8 +100,10 @@ def saveauction(request):
                           owner=request.user, deadline=a_time)
         auction.save()
 
-        # Uncomment after doing tests
-        #messages.add_message(request, messages.INFO, "New auction has been saved")
+        ###########
+        ###########
+        ########### Comment this for doing tests
+        messages.add_message(request, messages.INFO, "New auction has been saved")
         return HttpResponseRedirect(reverse("home"))
     else:
         return HttpResponseRedirect(reverse("home"))
@@ -122,6 +124,7 @@ def editauction(request, offset):
                      "id": auction.id,
                      "description": auction.description})
             elif auction.session != request.session._get_or_create_session_key():
+
                 messages.add_message(request, messages.INFO, "Auction is being edited in this moment!")
                 return HttpResponseRedirect(reverse("home"))
         else:
@@ -159,7 +162,11 @@ def bid(request, offset):
         auction = get_object_or_404(Auction, id=offset)
 
         if (auction.activestatus == False) or (auction.banstatus == True):
-            #messages.add_message(request, messages.INFO, "Auction is Due or Banned.")
+
+            ###########
+            ###########
+            ########### Comment this for doing tests
+            messages.add_message(request, messages.INFO, "Auction is Due or Banned.")
             return HttpResponseRedirect(reverse("home"))
         else:
             if str(request.user) != auction.bidder:
@@ -174,10 +181,18 @@ def bid(request, offset):
                          "price": auction.price,
                          "bidder": request.user})
                 else:
-                    #messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
+
+                    ###########
+                    ###########
+                    ########### Comment this for doing tests
+                    messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
                     return HttpResponseRedirect(reverse("home"))
             else:
-                #messages.add_message(request, messages.INFO, "No new bids since your last bid.")
+
+                ###########
+                ###########
+                ########### Comment this for doing tests
+                messages.add_message(request, messages.INFO, "No new bids since your last bid.")
                 return HttpResponseRedirect(reverse("home"))
 
 def updatebid(request, offset):
@@ -190,11 +205,19 @@ def updatebid(request, offset):
         return HttpResponseRedirect(reverse("home"))
 
     if (auction.activestatus == False) or (auction.banstatus == True):
-        #messages.add_message(request, messages.INFO, "Auction is Due or Banned.")
+
+        ###########
+        ###########
+        ########### Comment this for doing tests
+        messages.add_message(request, messages.INFO, "Auction is Due or Banned.")
         return HttpResponseRedirect(reverse("home"))
 
     if request.user == auction.owner:
-        #messages.add_message(request, messages.INFO, "Bidder can't be the owner.")
+
+        ###########
+        ###########
+        ########### Comment this for doing tests
+        messages.add_message(request, messages.INFO, "Bidder can't be the owner.")
         return HttpResponseRedirect(reverse("home"))
 
 
@@ -208,7 +231,11 @@ def updatebid(request, offset):
 
                 if auction.deadline <= (datetime.datetime.now() + datetime.timedelta(minutes=5)):
                     auction.deadline = auction.deadline + datetime.timedelta(minutes=5)
-                    #messages.add_message(request, messages.INFO, "Auction deadline has 5 more minutes.")
+
+                    ###########
+                    ###########
+                    ########### Comment this for doing tests
+                    messages.add_message(request, messages.INFO, "Auction deadline has 5 more minutes.")
                     auction.save()
                 else:
                     auction.save()
@@ -234,10 +261,16 @@ def updatebid(request, offset):
                     message = "Your bid on an Auction has been surpassed."
                     sendEmail(subject, recipient_list, message)
 
-
-                #messages.add_message(request, messages.INFO, "You made a new bid!")
+                ###########
+                ###########
+                ########### Comment this for doing tests
+                messages.add_message(request, messages.INFO, "You made a new bid!")
             else:
-                #messages.add_message(request, messages.INFO, "The bid has to be higher than 0.01 from the current price")
+
+                ###########
+                ###########
+                ########### Comment this for doing tests
+                messages.add_message(request, messages.INFO, "The bid has to be higher than 0.01 from the current price")
                 return HttpResponseRedirect(reverse("home"))
                 # form = bidAuction(initial={'price': auction.price})
                 # return render(request, "bid.html",
@@ -249,7 +282,11 @@ def updatebid(request, offset):
                 #                "price": auction.price,
                 #                "bidder": request.user})
         else:
-            #messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
+
+            ###########
+            ###########
+            ########### Comment this for doing tests
+            messages.add_message(request, messages.INFO, "Auction is being updated right now, wait and try again.")
             return HttpResponseRedirect(reverse("home"))
 
     return HttpResponseRedirect(reverse("home"))
