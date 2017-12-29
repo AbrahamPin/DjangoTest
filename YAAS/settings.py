@@ -56,7 +56,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     "django_cron",
-    'currencies',
     'rest_framework',
     'rest_framework.authtoken',
     'yassapp.apps.YassappConfig',
