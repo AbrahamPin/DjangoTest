@@ -60,7 +60,7 @@ def archive(request):
         'auctions': auctions,
         'language': language_form,
         'currency': currency_form,
-        'symbol': symbol,
+        #'symbol': symbol,
     })
 
 def redirectView(request):
