@@ -1,0 +1,4 @@
+django==1.11.3
+requests==2.18.4
+django-cron==0.5.0
+django-autofixture==0.12.1
