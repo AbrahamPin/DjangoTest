@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from yassapp.views import *
 
 urlpatterns = [
-    url(r'^home/$', archive, name="home"),
+    url(r'^(?:home/)?$', archive, name="home"),
     url(r'^createuser/$', register),
     url(r'^login/$', login_view),
     url(r'^logout/$', logout_view),
