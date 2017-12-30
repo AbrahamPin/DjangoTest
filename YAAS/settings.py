@@ -134,7 +134,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'source/locale'),
+    os.path.join(BASE_DIR, 'locale'),
 )
 
 FIXTURE_DIRS = (
